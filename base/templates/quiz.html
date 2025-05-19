@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ quiz.title }}</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: monospace;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        h2 {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        .question {
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .question.active {
+            display: block;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .option {
+            background-color: transparent;
+            color: aquamarine;
+            font-size: 18px;
+            border: 2px solid white;
+            padding: 15px;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.3s, color 0.3s;
+            outline: none;
+            user-select: none;
+            -webkit-user-select: none; /* Safari */
+        }
+
+        .option:hover {
+            background-color: white;
+            color: black;
+        }
+
+        .option.selected {
+            background-color: aquamarine;
+            color: black;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        button {
+            background-color: transparent;
+            color: white;
+            font-size: 20px;
+            border: 2px solid white;
+            padding: 15px 30px;
+            cursor: pointer;
+;
+            margin-top: 30px;
+            border-radius: 5px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        button:hover {
+            background-color: white;
+            color: black;
+        }
+
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            font-size: 18px;
+            color: white;
+            text-decoration: none;
+            border: 2px solid white;
+            padding: 10px 20px;
+        }
+
+        a:hover {
+            background-color: white;
+            color: black;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #333;
+            height: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress {
+            background-color: aquamarine;
+            height: 10px;
+            width: 0%;
+        }
+
+        .nextbutton{
+            color: aquamarine;
+            border-color: aquamarine;
+        }
+
+        .nextbutton:hover{
+            background-color: aquamarine;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ quiz.title }}</h1>
+        <h2>Answer the questions below:</h2>
+        <form id="quiz-form" method="POST">
+            {% csrf_token %}
+            {% for question in questions %}
+                <div class="question {% if forloop.first %}active{% endif %}" id="question_{{ question.id }}">
+                    <h3>{{ question.text }}</h3>
+                    <div class="options">
+                        <label class="option">
+                            <input type="radio" name="question_{{ question.id }}" value="A"> {{ question.option_a }}
+                        </label>
+                        <label class="option">
+                            <input type="radio" name="question_{{ question.id }}" value="B"> {{ question.option_b }}
+                        </label>
+                        <label class="option">
+                            <input type="radio" name="question_{{ question.id }}" value="C"> {{ question.option_c }}
+                        </label>
+                        <label class="option">
+                            <input type="radio" name="question_{{ question.id }}" value="D"> {{ question.option_d }}
+                        </label>
+                    </div>
+                </div>
+            {% endfor %}
+            <button type="button" id="next-button" class="nextbutton">Next</button>
+            <button type="submit" style="margin-left:220px;" class="sub">Submit Quiz</button>
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+        </form>
+        <a href="{% url 'quiz_list' %}">Back to Quiz List</a>
+    </div>
+
+    <script>
+        const questions = document.querySelectorAll('.question');
+        const nextButton = document.getElementById('next-button');
+        const submitButton = document.querySelector('button[type="submit"]');
+        const progressBar = document.getElementById('progress');
+        let currentQuestion = 0;
+        let selectedAnswers = {};
+
+        questions.forEach(question => {
+            const options = question.querySelectorAll('.option');
+            options.forEach(option => {
+                option.addEventListener('click', (event) => {
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+
+                    const radioButton = option.querySelector('input[type="radio"]');
+                    if (radioButton) {
+                        radioButton.checked = true;
+                    }
+                    event.preventDefault();
+                });
+            });
+        });
+        if (nextButton) {
+            nextButton.addEventListener('click', () => {
+                const currentQuestionElement = questions[currentQuestion];
+                const selectedOption = currentQuestionElement.querySelector('input[type="radio"]:checked');
+
+                if (selectedOption) {
+                    selectedAnswers[`question_${currentQuestionElement.id.split('_')[1]}`] = selectedOption.value;
+
+                    currentQuestionElement.classList.remove('active');
+                    currentQuestion++;
+
+                    if (currentQuestion < questions.length - 1) { // Continue if not the last question
+                        const nextQuestionElement = questions[currentQuestion];
+                        nextQuestionElement.classList.add('active');
+                        progressBar.style.width = `${(currentQuestion / questions.length) * 100}%`;
+                    } else { // This is the last question (or beyond)
+                        nextButton.style.display = 'none';
+                        if (submitButton) {
+                            submitButton.style.display = 'block';
+                        } else {
+                            const form = document.getElementById('quiz-form');
+                            const hiddenInput = document.createElement('input');
+                            hiddenInput.type = 'hidden';
+                            hiddenInput.name = 'answers';
+                            hiddenInput.value = JSON.stringify(selectedAnswers);
+                            form.appendChild(hiddenInput);
+                            form.submit();
+                        }
+                        if (currentQuestion < questions.length) { // Show the last question
+                            const nextQuestionElement = questions[currentQuestion];
+                            nextQuestionElement.classList.add('active');
+                            progressBar.style.width = `${(currentQuestion / questions.length) * 100}%`;
+                        }
+                    }
+                } else {
+                    alert('Please select an answer.');
+                }
+            });
+        }
+
+        // Initialize the first question as active
+        if (questions.length > 0) {
+            questions[0].classList.add('active');
+        }
+
+        // Initial state of submit button
+        if (submitButton) {
+            submitButton.style.display = questions.length <= 1 ? 'block' : 'none';
+            if (questions.length <= 1 && nextButton) {
+                nextButton.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

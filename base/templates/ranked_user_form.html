@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ranked User</title>
+    <style>
+    body {
+        background-color: black;
+        color: white;
+        font-family: Arial, sans-serif;
+        padding: 50px;
+    }
+
+    form {
+        max-width: 400px;
+        margin: auto;
+    }
+
+    label, input {
+        display: block;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+    input {
+        padding: 10px;
+        font-size: 18px;
+    }
+
+    button {
+        background-color: transparent;
+        color: aquamarine;
+        font-size: 18px;
+        border: 2px solid aquamarine;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 0px;
+        transition: background 0.3s, color 0.3s;
+    }
+
+    button:hover {
+        background-color: aquamarine;
+        color: black;
+        border-color: black;
+    }
+    </style>
+</head>
+<body>
+    <h1>Enter Your Username</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

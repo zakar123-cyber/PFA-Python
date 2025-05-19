@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz Results</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: monospace;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+            overflow-y: auto;
+        }
+
+        h1 {
+            font-size: 42px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        .result {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid white;
+            border-radius: 5px;
+        }
+
+        .question {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .answer {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .correct {
+            color: aquamarine;
+        }
+
+        .incorrect {
+            color: red;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            font-size: 20px;
+            color: white;
+            text-decoration: none;
+            border: 2px solid white;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+
+        a:hover {
+            background-color: white;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Quiz Results</h1>
+        {% for question, result in results.items %}
+            <div class="result">
+                <p class="question"><strong>Question:</strong> {{ question.text }}</p>
+                <p class="answer">
+                    <strong>Your Answer:</strong> 
+                    <span class="{% if not result.is_correct %}incorrect{% else %}correct{% endif %}">
+                        {{ result.user_answer }}
+                    </span>
+                </p>
+                <p><strong>Status:</strong> {% if result.is_correct %}Correct{% else %}Incorrect{% endif %}</p>
+            </div>
+        {% endfor %}
+        <a href="{% url 'quiz_list' %}">Back to Quiz List</a>
+    </div>
+</body>
+</html>
